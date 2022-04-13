@@ -508,7 +508,7 @@ async def itemcreator(ctx):
         if interaction.user == ctx.author:
             await interaction.response.edit_message(view=None)
             await interaction.followup.send(
-                "Enter the type you want this item to have. ie weapon, shield, armor, healable, or none")
+                "Enter the type you want this item to have. ie weapon, shield, armor, or none")
             cate = await bot.wait_for('message', check=is_auth, timeout=300)
             itemtype = f"type: {cate.content}"
             await interaction.followup.send(f"Your Item's type(s) is {itemtype}", view=view)
@@ -528,18 +528,12 @@ async def itemcreator(ctx):
                     await interaction.followup.send(f"Is this item craftable? (y/n)")
                     iscraftable = await bot.wait_for('message', check=is_auth, timeout=300)
                     if iscraftable.content == "y":
-                        await interaction.followup.send(f"What is the recipe? (cloth,iron,stone) < Like this.")
+                        await interaction.followup.send(f"What is the recipe? (Cloth,Iron,Stone) < Must match the "
+                                                        f"case of the resource, Usually uppercase as shown.")
                         recipe = await bot.wait_for('message', check=is_auth, timeout=300)
                         recipe = recipe.content.replace(" ", "").lower()
                         recipe = "recipe: " + recipe
                         f.write(f"{recipe} \n")
-                    if "healable" in itemtype:
-                        await interaction.followup.send(
-                            f"How much health will this item heal? (Should be just a number, ie 15)")
-                        heal = await bot.wait_for('message', check=is_auth, timeout=300)
-                        health = str(heal.content)
-                        health = "health: " + health
-                        f.write(f"{health}")
                     if "weapon" in itemtype:
                         await interaction.followup.send(
                             f"How much damage will this item do? (this is a multiplier, usually over 1.0)")
