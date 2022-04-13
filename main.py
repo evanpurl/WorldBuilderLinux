@@ -707,4 +707,4 @@ async def dungeoncreator(ctx):
     await createdungeon(ctx, bot)
 
 
-bot.run("OTM3NTQ2NTI3NDY1OTYzNTkw.YfdUPg.TiKDMOZANBwGJkkcumIt4wGINr4")
+bot.run("OTM3NTQ2NTI3NDY1OTYzNTkw.YfdUPg.EIaW-h0t1qDZLr0nDgJgwJbXRa0")
