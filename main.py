@@ -25,6 +25,7 @@ dirr = sys.path[0]
 @bot.event
 async def on_ready():
     print(f"We have logged in as {bot.user}")
+    print(f"Py-Cord version: {discord.__version__}")
     await bot.change_presence(activity=discord.Game('Powered by NLS: https://www.nitelifesoftware.com'))
 
 
