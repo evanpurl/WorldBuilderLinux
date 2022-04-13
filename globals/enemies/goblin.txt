@@ -1,0 +1,8 @@
+health: 50
+damage: 10
+defense: 3
+bleedable: t
+burnable: t
+freezable: t
+explodable: t
+poisonable: f

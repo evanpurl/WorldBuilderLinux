@@ -1,0 +1,8 @@
+type: weapon
+damage: 10
+defense: 0
+bleeding: f
+poison: f
+burning: f
+explodable: f
+freezing: t

@@ -1,0 +1,2 @@
+ll: 1
+enemies: skeleton,snake,zombie,mummy

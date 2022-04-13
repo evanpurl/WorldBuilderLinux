@@ -1,0 +1,2 @@
+type: armor
+defense: 5

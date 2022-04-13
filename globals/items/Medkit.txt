@@ -1,0 +1,4 @@
+Value: 12 
+type: healable 
+recipe: cloth,cloth,cloth,cloth,cloth,cloth 
+health: 35

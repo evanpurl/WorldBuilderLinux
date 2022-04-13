@@ -1,0 +1,4 @@
+Value: 200 
+type: armor 
+recipe: iron,iron,iron,iron,cloth,cloth 
+defense: 2.25

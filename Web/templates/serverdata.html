@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ id }}</title>
+</head>
+<body style="background-color:rgb(192,192,192)">
+<h2>Server ID: {{ id }}</h2>
+<div style="float: left">
+    <a href="/townhall/{{ id }}"><img src="{{ url_for('static' ,filename='townhall.png') }}" align="middle" height="150"/></a>
+    <a href="/townhall/{{ id }}" style="text-decoration: none; color: black"><p align="middle">Townhall</p></a>
+</div>
+{% for a  in players%}
+<div style="float: right;">
+    <a href="/player/{{ id }}/{{ a.split(' ', 1)[0] }}"><img src="{{ url_for('static' ,filename='WBHouse.gif') }}" height="200" align="middle"/></a>
+    <a href="/player/{{ id }}/{{ a.split(' ', 1)[0] }}" style="text-decoration: none; color: black"><p align="middle">{{ a.split(' ', 1)[1] }}</p></a>
+</div>
+{% endfor %}
+
+</body>
+</html>

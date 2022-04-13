@@ -1,0 +1,3 @@
+health: 14
+damage: 15
+defense: 6

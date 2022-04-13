@@ -1,0 +1,4 @@
+Value: 155 
+type: shield 
+recipe: cloth,cloth,iron,iron,wood 
+defense: 1.5

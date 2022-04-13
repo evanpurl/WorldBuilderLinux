@@ -1,0 +1,4 @@
+Value: 250 
+type: weapon 
+recipe: iron,iron,stick 
+damage: 1.75
