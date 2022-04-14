@@ -49,9 +49,9 @@ testing = [904120920862519396]
 Support = [904120920862519396]
 
 
-@bot.slash_command(guild_ids=testing, description="Command for miners to gather minerals, stone, iron, gold, etc.")
-# @commands.cooldown(rate=1, per=7200, type=commands.BucketType.member)
-# @has_role("Design Lead")
+@bot.slash_command(description="Command for miners to gather minerals, stone, iron, gold, etc.")
+@commands.cooldown(rate=1, per=3600, type=commands.BucketType.member)
+@has_role("Miner")
 async def mine(ctx):
     guildid = str(ctx.guild.id)
     memberid = str(ctx.user.id)
@@ -133,9 +133,9 @@ async def mine_error(ctx, error):
         print(error)
 
 
-@bot.slash_command(guild_ids=testing, description="Command for Lumberjacks to gather wood.")
-# @commands.cooldown(rate=1, per=7200, type=commands.BucketType.member)
-# @has_role("Lumberjack")
+@bot.slash_command(description="Command for Lumberjacks to gather wood.")
+@commands.cooldown(rate=1, per=3600, type=commands.BucketType.member)
+@has_role("Lumberjack")
 async def lumber(ctx):
     guildid = str(ctx.guild.id)
     memberid = str(ctx.user.id)
@@ -215,9 +215,8 @@ async def lumber_error(ctx, error):
         print(error)
 
 
-@bot.slash_command(guild_ids=testing, description="Command for the Accountant to change the server tax rate.")
-# @has_role("Accountant")
-@has_role("Design Lead")
+@bot.slash_command(description="Command for the Accountant to change the server tax rate.")
+@has_role("Accountant")
 async def taxrate(ctx):
     def is_auth(m):
         return m.author == ctx.author
@@ -240,8 +239,7 @@ async def taxrate_error(ctx, error):
         await ctx.send(msg)
 
 
-@bot.slash_command(guild_ids=testing, description="Command to get upgrades")
-@has_role("Design Lead")
+@bot.slash_command(description="Command to get a list of upgrades.")
 async def upgradelist(ctx):
     def is_auth(m):
         return m.author == ctx.author
@@ -350,8 +348,7 @@ async def upgradecreator_error(ctx, error):
         print(error)
 
 
-@bot.slash_command(guild_ids=testing, description="Command to get upgrades")
-@has_role("Design Lead")
+@bot.slash_command(description="Command to get upgrades")
 async def purchaseupg(ctx):
     def is_auth(m):
         return m.author == ctx.author
@@ -582,8 +579,7 @@ async def itemcreator_error(ctx, error):
     # to them.)
 
 
-@bot.slash_command(guild_ids=Support, description="Command to list current server information.")
-@has_role("Design Lead")
+@bot.slash_command(description="Command to list current server information.")
 async def serverinfo(ctx):
     servstats = []
     os.chdir(f"{dirr}/World/{str(ctx.guild.id)}")
@@ -614,7 +610,7 @@ async def serverinfo(ctx):
     await ctx.respond(f"**Server information for {ctx.guild.name}:** \n \n" + "\n".join(servstats))
 
 
-@bot.slash_command(guild_ids=Support)
+@bot.slash_command(description="Command to repair damaged weapons.")
 async def repair(ctx):
     items = []
     durr = []
@@ -678,7 +674,7 @@ async def repair(ctx):
         await ctx.respond(f"That selection is not in the list of repairable items.")
 
 
-@bot.slash_command(guild_ids=Support)
+@bot.slash_command(description="Dungeon Crawler start command.")
 async def dc(ctx):
     id = ctx.author.id
     await enterdungeon(ctx, bot, ctx.author, id)

@@ -6,6 +6,10 @@ dirr = sys.path[0]
 
 class Player:
     def __init__(self, guildid, memberid):
+        if not os.path.exists(f"{dirr}/World/{guildid}/Players/{memberid}"):
+            os.mkdir(f"{dirr}/World/{guildid}/Players/{memberid}")
+            os.mkdir(f"{dirr}/World/{guildid}/Players/{memberid}/inventory")
+
         self.health = 0
         self.level = 0
         self.mana = 0
@@ -60,7 +64,7 @@ class Player:
             name.close()
         return self.name
 
-    def getdamage(self): #Updated 3/23/2022
+    def getdamage(self):  # Updated 3/23/2022
         if os.path.exists(f"{dirr}/World/{self.guildid}/Players/{self.memberid}/damage.txt"):
             with open(f"{dirr}/World/{self.guildid}/Players/{self.memberid}/damage.txt", "r") as damage:
                 dam = float(damage.readline())
@@ -81,8 +85,7 @@ class Player:
         else:
             return 0.0
 
-
-    def getdefense(self): #Updated 3/23/2022
+    def getdefense(self):  # Updated 3/23/2022
         if os.path.exists(f"{dirr}/World/{self.guildid}/Players/{self.memberid}/defense.txt"):
             with open(f"{dirr}/World/{self.guildid}/Players/{self.memberid}/defense.txt", "r") as defense:
                 defe = float(defense.readline())
@@ -93,7 +96,7 @@ class Player:
         return defe
 
     def getshielddef(self, shield):
-        if shield != None:
+        if shield is not None:
             with open(f"{dirr}/globals/items/{shield}.txt", "r") as shield:
                 lines = shield.readlines()
                 defenseline = [i for i in lines if "defense" in i]
@@ -113,7 +116,6 @@ class Player:
             return defe
         else:
             return 0.0
-
 
     def getitems(self, itemtype):
         itemlists = os.listdir(f"{dirr}/globals/items")
@@ -170,7 +172,6 @@ class Player:
                 if armor:
                     f.write("\ndurability: 100")
 
-
     def remfrominv(self, itemname):
         itemname = itemname.replace(' \n', '')
         with open(f"{dirr}/World/{self.guildid}/Players/{self.memberid}/inventory/{itemname}.txt",
@@ -180,7 +181,7 @@ class Player:
                   "w") as f:
             f.write(f"quantity: {str(int(amount[0].split(' ')[1]) - 1)}")
             if len(amount) > 1:
-                f.write("\n"+amount[1])
+                f.write("\n" + amount[1])
         with open(f"{dirr}/World/{self.guildid}/Players/{self.memberid}/inventory/{itemname}.txt",
                   "r") as f:
             amount = f.readlines()
@@ -252,6 +253,7 @@ class Player:
                         return f"{craftitem} can not be crafted, missing crafting item!"
         else:
             return f"{craftitem} does not exist!"
+
     def getlevel(self):
         if not os.path.exists(f"{dirr}/World/{str(self.guildid)}/Players/{str(self.memberid)}/level.txt"):
             with open(f"{dirr}/World/{str(self.guildid)}/Players/{str(self.memberid)}/level.txt", "w+") as level:
@@ -266,7 +268,7 @@ class Player:
         with open(f"{dirr}/World/{str(self.guildid)}/Players/{str(self.memberid)}/level.txt", "r") as level:
             l = level.readline()
         with open(f"{dirr}/World/{str(self.guildid)}/Players/{str(self.memberid)}/level.txt", "w+") as level:
-            lev = str(int(l)+1)
+            lev = str(int(l) + 1)
             level.write(lev)
         return lev
 

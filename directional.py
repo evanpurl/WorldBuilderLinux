@@ -199,7 +199,7 @@ async def enterdungeon(ctx, bot, user, id):
     async def attackcallback(interaction):
         nonlocal enemyclass
         await interaction.response.edit_message(view=None)
-        if player.defmode != None:
+        if player.defmode is not None:
             player.defmode == None
             player.defense = player.defense / 2
         if player.mana < 5:
@@ -247,7 +247,7 @@ async def enterdungeon(ctx, bot, user, id):
         if player.mana < player.maxmana:
             player.mana += 25
             if player.mana > 100:
-                player.mana == 100
+                player.mana = 100
             await user.send(f"Defense raised, some mana has been regenerated! **Mana: {player.mana}**")
         else:
             await user.send(f"Defense raised!")
