@@ -1,4 +1,0 @@
-Value: 4 
-type: healable 
-recipe: cloth 
-health: 8

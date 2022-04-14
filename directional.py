@@ -250,7 +250,7 @@ async def enterdungeon(ctx, bot, user, id):
                 player.mana = 100
             await user.send(f"Defense raised, some mana has been regenerated! **Mana: {player.mana}**")
         else:
-            await user.send(f"Defense raised!")
+            await user.send(f"Defense raised!", view=combat)
         enmove = enemymove(player.defmode)
         await user.send(f"The {enemyclass.getname()} will {enmove}!")
         if enmove == "attack":
@@ -285,7 +285,7 @@ async def enterdungeon(ctx, bot, user, id):
                 await user.send(f"You have healed some of your wounds. **Health: {player.health} Mana: {player.mana}**",
                                 view=combat)
             else:
-                await user.send("Your health is already full!")
+                await user.send("Your health is already full!", view=combat)
 
     async def retreatcallback(interaction):
         nonlocal room
