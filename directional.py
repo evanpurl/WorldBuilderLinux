@@ -224,6 +224,7 @@ async def enterdungeon(ctx, bot, user, id):
 
             if player.xp >= 100:
                 player.levelup()
+                player.xp = 0
                 await user.send(f"You have leveled up! **Level: {player.getlevel()}**")
             else:
                 player.setxp(player.xp)
@@ -354,7 +355,10 @@ async def enterdungeon(ctx, bot, user, id):
         nonlocal enemyclass
         room += 1
         if room == maxrooms:
-            await user.send("Boss fight room would be here. Here's a cookie for finishing this! 🍪")
+            await user.send(f"Boss fight room would be here. Here's a cookie for finishing this! 🍪 XP gained for "
+                            "finishing: 25. Total XP: {player.xp}")
+            player.xp += 25
+            player.setxp(player.xp)
             return
         if left[room] == "enemy":
             enemyclass = Enemy(enemylist[random.randint(0, len(enemylist) - 1)])
