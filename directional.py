@@ -128,7 +128,7 @@ async def enterdungeon(ctx, bot, user, id):
         await interaction.response.edit_message(view=None)
 
         player.health = player.gethealth()
-        player.xp = int(player.getxp())
+        player.xp = float(player.getxp())
         player.mana = player.getmana()
         player.level = player.getlevel()
         if player.getweapondamage(player.weapon) == 0:
@@ -259,7 +259,7 @@ async def enterdungeon(ctx, bot, user, id):
                 player.mana = 100
             await user.send(f"Defense raised, some mana has been regenerated! **Mana: {player.mana}**")
         else:
-            await user.send(f"Defense raised!", view=combat)
+            await user.send(f"Defense raised!")
         enmove = enemymove(player.defmode)
         await user.send(f"The {enemyclass.getname()} will {enmove}!")
         if enmove == "attack":

@@ -133,6 +133,7 @@ async def mine_error(ctx, error):
         print(error)
 
 
+
 @bot.slash_command(description="Command for Lumberjacks to gather wood.")
 @commands.cooldown(rate=1, per=3600, type=commands.BucketType.member)
 @has_role("Lumberjack")
@@ -674,7 +675,8 @@ async def repair(ctx):
         await ctx.respond(f"That selection is not in the list of repairable items.")
 
 
-@bot.slash_command(description="Dungeon Crawler start command.")
+@bot.slash_command(guild_ids=Support, description="Dungeon Crawler start command.")
+@has_role("Design Lead")
 async def dc(ctx):
     id = ctx.author.id
     await enterdungeon(ctx, bot, ctx.author, id)
