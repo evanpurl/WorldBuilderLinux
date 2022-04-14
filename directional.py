@@ -216,7 +216,7 @@ async def enterdungeon(ctx, bot, user, id):
         if enemyclass.health <= 0:
             player.health = 100
             player.mana = 100
-            xpgained = int(enemyclass.gethealth()) / 4
+            xpgained = float(enemyclass.gethealth()) / 4
             await user.send(f"You have won the battle! **XP Gained: {xpgained}** where will you go next?", view=move)
             player.xp += xpgained
 
