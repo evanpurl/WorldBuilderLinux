@@ -12,6 +12,7 @@ class Player:
 
         self.health = 0
         self.level = 0
+        self.xp = 0
         self.mana = 0
         self.maxmana = 100
         self.name = None
@@ -263,6 +264,19 @@ class Player:
             with open(f"{dirr}/World/{str(self.guildid)}/Players/{str(self.memberid)}/level.txt", "r") as level:
                 l = level.readline()
                 return l
+    def getxp(self):
+        if not os.path.exists(f"{dirr}/World/{str(self.guildid)}/Players/{str(self.memberid)}/xp.txt"):
+            with open(f"{dirr}/World/{str(self.guildid)}/Players/{str(self.memberid)}/xp.txt", "w+") as level:
+                level.write(str(0))
+                return 0
+        else:
+            with open(f"{dirr}/World/{str(self.guildid)}/Players/{str(self.memberid)}/xp.txt", "r") as level:
+                l = level.readline()
+                return l
+
+    def setxp(self, xp):
+        with open(f"{dirr}/World/{str(self.guildid)}/Players/{str(self.memberid)}/xp.txt", "w+") as level:
+            level.write(str(xp))
 
     def levelup(self):
         with open(f"{dirr}/World/{str(self.guildid)}/Players/{str(self.memberid)}/level.txt", "r") as level:

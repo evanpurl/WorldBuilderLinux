@@ -128,6 +128,7 @@ async def enterdungeon(ctx, bot, user, id):
         await interaction.response.edit_message(view=None)
 
         player.health = player.gethealth()
+        player.xp = int(player.getxp())
         player.mana = player.getmana()
         player.level = player.getlevel()
         if player.getweapondamage(player.weapon) == 0:
@@ -212,11 +213,19 @@ async def enterdungeon(ctx, bot, user, id):
                 player.mana -= 5
                 enemyclass.health -= damage
             await user.send(f"You attacked the {enemyclass.getname()}! **Their health: {enemyclass.health}**")  #
-            # remove the view once the enemy can do a move, re-add it after the enemy does their move.
         if enemyclass.health <= 0:
             player.health = 100
             player.mana = 100
-            await user.send(f"You have won the battle! where will you go next?", view=move)
+            xpgained = int(enemyclass.gethealth()) / 4
+            await user.send(f"You have won the battle! **XP Gained: {xpgained}** where will you go next?", view=move)
+            player.xp += xpgained
+
+            if player.xp >= 100:
+                player.levelup()
+                await user.send(f"You have leveled up! **Level: {player.getlevel()}**")
+            else:
+                player.setxp(player.xp)
+
         else:
             enmove = enemymove(player.defmode)
             await user.send(f"The {enemyclass.getname()} will {enmove}!")
