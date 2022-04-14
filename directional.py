@@ -141,7 +141,9 @@ async def enterdungeon(ctx, bot, user, id):
             player.defense = player.getdefense() * (
                     player.getarmordef(player.armor) + player.getshielddef(player.shield))
         await user.send(
-            f"**Level: {player.level} Health: {player.health} \n Mana: {player.mana} \n Weapon: {player.weapon} \n Damage: {player.damage} \n Shield: {player.shield} \n Defense: {player.defense} \n Armor Set: {player.armor}**")
+            f"**Level: {player.level} \n Health: {player.health} \n Mana: {player.mana} \n Weapon: {player.weapon} \n "
+            f"Damage: {player.damage} \n Shield: {player.shield} \n Defense: {player.defense} \n Armor Set: "
+            f"{player.armor}**")
         w = os.listdir(f"{dirr}/globals/dungeons/")
         r = random.randint(0, len(w) - 1)
         light = 0
