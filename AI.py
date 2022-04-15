@@ -12,7 +12,7 @@ def enemymove(defense):
         else:
             return "attack"
     else:
-        if rand > 38:
+        if rand > 32:
             return "attack"
         else:
             return "defend"
