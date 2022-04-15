@@ -21,6 +21,8 @@ intents = discord.Intents.all()
 bot = discord.Bot(intents=intents)
 dirr = sys.path[0]
 
+wb = bot.create_group('wb', 'World Builder command prefix.')
+
 
 @bot.event
 async def on_ready():
@@ -49,7 +51,7 @@ testing = [904120920862519396]
 Support = [904120920862519396]
 
 
-@bot.slash_command(description="Command for miners to gather minerals, stone, iron, gold, etc.")
+@wb.command(description="Command for miners to gather minerals, stone, iron, gold, etc.")
 @commands.cooldown(rate=1, per=3600, type=commands.BucketType.member)
 @has_role("Miner")
 async def mine(ctx):
@@ -134,7 +136,7 @@ async def mine_error(ctx, error):
 
 
 
-@bot.slash_command(description="Command for Lumberjacks to gather wood.")
+@wb.command(description="Command for Lumberjacks to gather wood.")
 @commands.cooldown(rate=1, per=3600, type=commands.BucketType.member)
 @has_role("Lumberjack")
 async def lumber(ctx):
@@ -216,7 +218,7 @@ async def lumber_error(ctx, error):
         print(error)
 
 
-@bot.slash_command(description="Command for the Accountant to change the server tax rate.")
+@wb.command(description="Command for the Accountant to change the server tax rate.")
 @has_role("Accountant")
 async def taxrate(ctx):
     def is_auth(m):
@@ -240,7 +242,7 @@ async def taxrate_error(ctx, error):
         await ctx.send(msg)
 
 
-@bot.slash_command(description="Command to get a list of upgrades.")
+@wb.command(description="Command to get a list of upgrades.")
 async def upgradelist(ctx):
     def is_auth(m):
         return m.author == ctx.author
@@ -259,7 +261,7 @@ async def upgradelist_error(ctx, error):
         print(error)
 
 
-@bot.slash_command(guild_ids=testing, description="Command to get upgrades")
+@wb.command(guild_ids=Support, description="Command to get upgrades")
 @has_role("Design Lead")
 async def upgradecreator(ctx):
     def is_auth(m):
@@ -349,7 +351,7 @@ async def upgradecreator_error(ctx, error):
         print(error)
 
 
-@bot.slash_command(description="Command to get upgrades")
+@wb.command(description="Command to get upgrades")
 async def purchaseupg(ctx):
     def is_auth(m):
         return m.author == ctx.author
@@ -391,7 +393,7 @@ async def purchaseupg_error(ctx, error):
         print(error)
 
 
-@bot.slash_command(guild_ids=Support, description="Admin command to create resources.")
+@wb.command(guild_ids=Support, description="Admin command to create resources.")
 @has_role("Design Lead")
 async def resourcecreator(ctx):
     def is_auth(m):
@@ -462,7 +464,7 @@ async def resourcecreator_error(ctx, error):
     # to them.)
 
 
-@bot.slash_command(guild_ids=Support, description="Admin command to create Items.")
+@wb.command(guild_ids=Support, description="Admin command to create Items.")
 @has_role("Design Lead")
 async def itemcreator(ctx):
     itemname = ""
@@ -580,7 +582,7 @@ async def itemcreator_error(ctx, error):
     # to them.)
 
 
-@bot.slash_command(description="Command to list current server information.")
+@wb.command(description="Command to list current server information.")
 async def serverinfo(ctx):
     servstats = []
     os.chdir(f"{dirr}/World/{str(ctx.guild.id)}")
@@ -611,7 +613,7 @@ async def serverinfo(ctx):
     await ctx.respond(f"**Server information for {ctx.guild.name}:** \n \n" + "\n".join(servstats))
 
 
-@bot.slash_command(description="Command to repair damaged weapons.")
+@wb.command(description="Command to repair damaged weapons.")
 async def repair(ctx):
     items = []
     durr = []
@@ -621,6 +623,9 @@ async def repair(ctx):
 
     def is_auth(m):
         return m.author == ctx.author
+
+    if not os.path.exists(f"{dirr}/World/{str(ctx.guild.id)}/Players/{str(ctx.user.id)}/inventory"):
+        os.mkdir(f"{dirr}/World/{str(ctx.guild.id)}/Players/{str(ctx.user.id)}/inventory")
 
     pitems = os.listdir(f"{dirr}/World/{str(ctx.guild.id)}/Players/{str(ctx.user.id)}/inventory")
     for a in pitems:
@@ -633,68 +638,72 @@ async def repair(ctx):
                     items.append(a.replace(".txt", ""))
                     durr.append(durability[0])
 
-    for a, b in enumerate(items):
-        idx.append(a)
-
-        allitems.append(f"{b}")
-        it.append(f"{a + 1} {b}")
-    await ctx.respond(f"Which item would you like to repair?\n" + '\n'.join(it))
-    itemselection = await bot.wait_for('message', check=is_auth, timeout=300)
-    itemselection = itemselection.content
-    if int(int(itemselection) - 1) in idx:
-        with open(f"{dirr}/globals/items/{allitems[int(int(itemselection) - 1)]}.txt", "r") as item:
-            lin = item.readlines()
-        value = [i for i in lin if "Value" in i]
-        if value:
-            value = value[0].split(" ")[1]
-            c = round((100 - int(durr[int(int(itemselection) - 1)].split(' ')[1])) / 100, 1)
-            cost = int(value) * c
-        else:
-            cost = 100
-        await ctx.respond(
-            f"You chose {allitems[int(int(itemselection) - 1)]}, Current durability: {int(durr[int(int(itemselection) - 1)].split(' ')[1])} Cost to repair to full: {cost}. Do you want to repair? (y or n)")
-        yorn = await bot.wait_for('message', check=is_auth, timeout=300)
-        yorn = yorn.content
-        if yorn == "y":
-            with open(
-                    f"{dirr}/World/{str(ctx.guild.id)}/Players/{str(ctx.user.id)}/inventory/{allitems[int(int(itemselection) - 1)]}.txt",
-                    "r") as item:
-                lines = item.readlines()
-            quantity = [i for i in lines if "quantity" in i]
-            with open(
-                    f"{dirr}/World/{str(ctx.guild.id)}/Players/{str(ctx.user.id)}/inventory/{allitems[int(int(itemselection) - 1)]}.txt",
-                    "w") as item:
-                item.write(quantity[0])
-                item.write(f"durability: 100")
-
-            await ctx.respond(
-                f"Item {allitems[int(int(itemselection) - 1)]} has been repaired for {cost}. Old Balance: {readwallet(str(ctx.guild.id), str(ctx.user.id))}, New Balance: {writewallet(str(ctx.guild.id), str(ctx.user.id), cost * -1)}")
-        else:
-            await ctx.respond(f"Item {allitems[int(int(itemselection) - 1)]} has not been repaired.")
+    if len(items) == 0:
+        await ctx.respond("No repairable items.")
     else:
-        await ctx.respond(f"That selection is not in the list of repairable items.")
+
+        for a, b in enumerate(items):
+            idx.append(a)
+
+            allitems.append(f"{b}")
+            it.append(f"{a + 1} {b}")
+        await ctx.respond(f"Which item would you like to repair?\n" + '\n'.join(it))
+        itemselection = await bot.wait_for('message', check=is_auth, timeout=300)
+        itemselection = itemselection.content
+        if int(int(itemselection) - 1) in idx:
+            with open(f"{dirr}/globals/items/{allitems[int(int(itemselection) - 1)]}.txt", "r") as item:
+                lin = item.readlines()
+            value = [i for i in lin if "Value" in i]
+            if value:
+                value = value[0].split(" ")[1]
+                c = round((100 - int(durr[int(int(itemselection) - 1)].split(' ')[1])) / 100, 1)
+                cost = int(value) * c
+            else:
+                cost = 100
+            await ctx.respond(
+                f"You chose {allitems[int(int(itemselection) - 1)]}, Current durability: {int(durr[int(int(itemselection) - 1)].split(' ')[1])} Cost to repair to full: {cost}. Do you want to repair? (y or n)")
+            yorn = await bot.wait_for('message', check=is_auth, timeout=300)
+            yorn = yorn.content
+            if yorn == "y":
+                with open(
+                        f"{dirr}/World/{str(ctx.guild.id)}/Players/{str(ctx.user.id)}/inventory/{allitems[int(int(itemselection) - 1)]}.txt",
+                        "r") as item:
+                    lines = item.readlines()
+                quantity = [i for i in lines if "quantity" in i]
+                with open(
+                        f"{dirr}/World/{str(ctx.guild.id)}/Players/{str(ctx.user.id)}/inventory/{allitems[int(int(itemselection) - 1)]}.txt",
+                        "w") as item:
+                    item.write(quantity[0])
+                    item.write(f"durability: 100")
+
+                await ctx.respond(
+                    f"Item {allitems[int(int(itemselection) - 1)]} has been repaired for {cost}. Old Balance: {readwallet(str(ctx.guild.id), str(ctx.user.id))}, New Balance: {writewallet(str(ctx.guild.id), str(ctx.user.id), cost * -1)}")
+            else:
+                await ctx.respond(f"Item {allitems[int(int(itemselection) - 1)]} has not been repaired.")
+        else:
+            await ctx.respond(f"That selection is not in the list of repairable items.")
 
 
-@bot.slash_command(guild_ids=Support, description="Dungeon Crawler start command.")
+@wb.command(guild_ids=Support, description="Dungeon Crawler start command.")
 @has_role("Design Lead")
 async def dc(ctx):
     id = ctx.author.id
     await enterdungeon(ctx, bot, ctx.author, id)
 
 
-@bot.slash_command(guild_ids=Support)
+@wb.command(guild_ids=Support)
 @has_role("Design Lead")
 async def classcreator(ctx):
     await createclass(ctx, bot)
 
 
-@bot.slash_command(guild_ids=Support)
+@wb.command(guild_ids=Support)
 @has_role("Design Lead")
 async def enemycreator(ctx):
     await createenemy(ctx, bot)
 
 
-@bot.slash_command(guild_ids=Support)
+@wb.command(guild_ids=Support)
 @has_role("Design Lead")
 async def dungeoncreator(ctx):
     await createdungeon(ctx, bot)

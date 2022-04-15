@@ -12,6 +12,7 @@ class Player:
 
         self.health = 0
         self.level = 0
+        self.maxhealth = 0
         self.xp = 0
         self.mana = 0
         self.maxmana = 100
@@ -294,12 +295,20 @@ class Enemy:
     def __init__(self, unitname):
         self.health = 0
         self.name = unitname
-        self.damage = None
-        self.defense = None
+        self.damage = 0
+        self.defense = 0
         self.defmode = None
+        self.level = 0
 
     def getname(self):
         return self.name
+
+    def islevelten(self, level):
+        if self.level != 1:
+            self.damage = self.setdamage((self.damage * 4)-self.damage)
+            self.health = self.sethealth((self.health * 4)-self.health)
+            self.defense = self.setdefense((self.defense * 4)-self.defense)
+            self.level = 1
 
     def gethealth(self):
         with open(f"{dirr}/globals/enemies/{self.name}.txt", "r") as enemyh:
@@ -312,14 +321,19 @@ class Enemy:
     def sethealth(self, healthh):
         self.health += int(healthh)
         return self.health
+    def setdamage(self, healthh):
+        self.damage += int(healthh)
+        return self.damage
+    def setdefense(self, healthh):
+        self.defense += int(healthh)
+        return self.defense
 
     def getdamage(self):
         with open(f"{dirr}/globals/enemies/{self.name}.txt", "r") as enemyd:
             lines = enemyd.readlines()
             for a in lines:
                 if "damage" in a:
-                    self.damage = a.split(" ")[1]
-        enemyd.close()
+                    self.damage = int(a.split(" ")[1])
         return self.damage
 
     def getdefense(self):
@@ -327,6 +341,5 @@ class Enemy:
             lines = enemyd.readlines()
             for a in lines:
                 if "defense" in a:
-                    self.defense = a.split(" ")[1]
-        enemyd.close()
+                    self.defense = int(a.split(" ")[1])
         return self.defense

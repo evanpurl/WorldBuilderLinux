@@ -8,7 +8,7 @@ def dunrooms(roomnum):  # This function is designed to create the dungeon's room
     left = []
     right = []
     front = []
-    dec = ["room", "room", "room", "room item", "room", "room item", "enemy"]
+    dec = ["room", "room", "enemy", "room", "room", "room item", "enemy"]
     for a in range(1, roomnum + 1):
         for b in range(0, len(directions)):
             decision = dec[random.randint(0, len(dec) - 1)]

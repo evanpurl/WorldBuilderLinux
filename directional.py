@@ -31,6 +31,8 @@ async def enterdungeon(ctx, bot, user, id):
     equip.add_item(finish)
     view.add_item(enter)
     view.add_item(turnback)
+    if not os.path.exists(f"{dirr}/World/{guildid}/Players/{str(id)}/inventory"):
+        os.mkdir(f"{dirr}/World/{guildid}/Players/{str(id)}/inventory")
 
     player = Player(guildid, str(id))
 
@@ -127,10 +129,51 @@ async def enterdungeon(ctx, bot, user, id):
     async def finishcallback(interaction):  # Finish Button
         await interaction.response.edit_message(view=None)
 
+        player.level = player.getlevel()
+
+        if not os.path.exists(f"{dirr}/World/{guildid}/Players/{str(id)}/class.txt"):
+            if int(player.level) >= 10:
+                await user.send(f"You have reached level 10, you can assign yourself to a class.")
+                classlist = []
+                classnum = []
+                classes = os.listdir(f"{dirr}/globals/classes")
+                for num, data in enumerate(classes):
+                    classlist.append(f"{num+1} {data.replace('.txt', '')}")
+                    classnum.append(num+1)
+                await user.send(f"Class choices: \n" + '\n'.join(classlist))
+                choice = await bot.wait_for('message', check=is_auth, timeout=300)
+
+                if int(choice.content) in classnum:
+                    chosenclass = classes[int(choice.content)-1].replace(".txt", "")
+
+                    await user.send(f"You have chosen the class {chosenclass}!")
+                    with open(f"{dirr}/World/{guildid}/Players/{str(id)}/class.txt", "w+") as pclass:
+                        pclass.write(chosenclass)
+                    with open(f"{dirr}/globals/classes/{chosenclass}.txt", "r") as classe:
+                        stats = classe.readlines()
+                        health = [i for i in stats if 'health' in i][0].split(": ")[1]
+                        damage = [i for i in stats if 'damage' in i][0].split(": ")[1]
+                        deff = [i for i in stats if 'defense' in i][0].split(": ")[1]
+                    with open(f"{dirr}/World/{guildid}/Players/{str(id)}/damage.txt", "r") as dam:
+                        d = int(dam.readline())
+                    with open(f"{dirr}/World/{guildid}/Players/{str(id)}/damage.txt", "w+") as dam:
+                        dam.write(str(d+int(damage)))
+                    with open(f"{dirr}/World/{guildid}/Players/{str(id)}/health.txt", "r") as hea:
+                        h = int(hea.readline())
+                    with open(f"{dirr}/World/{guildid}/Players/{str(id)}/health.txt", "w+") as hea:
+                        hea.write(str(h+int(health)))
+                    with open(f"{dirr}/World/{guildid}/Players/{str(id)}/defense.txt", "r") as dam:
+                        d = int(dam.readline())
+                    with open(f"{dirr}/World/{guildid}/Players/{str(id)}/defense.txt", "w+") as dam:
+                        dam.write(str(d+int(deff)))
+                else:
+                    await user.send(f"The option you chose is not available, finish Dungeon Crawler to get this prompt again.")
         player.health = player.gethealth()
+        player.maxhealth = player.gethealth()
         player.xp = float(player.getxp())
         player.mana = player.getmana()
-        player.level = player.getlevel()
+
+
         if player.getweapondamage(player.weapon) == 0:
             player.damage = player.getdamage()
         else:
@@ -148,8 +191,6 @@ async def enterdungeon(ctx, bot, user, id):
         r = random.randint(0, len(w) - 1)
         light = 0
         enemies = []
-
-        inventory = player.totalinv()
 
         async def entercallback(interaction):
             await user.send(f"Choosing to enter, you make your way into the {dname}.", view=move)
@@ -216,8 +257,6 @@ async def enterdungeon(ctx, bot, user, id):
                 enemyclass.health -= damage
             await user.send(f"You attacked the {enemyclass.getname()}! **Their health: {enemyclass.health}**")  #
         if enemyclass.health <= 0:
-            player.health = 100
-            player.mana = 100
             xpgained = float(enemyclass.gethealth()) / 4
             await user.send(f"You have won the battle! **XP Gained: {xpgained}** where will you go next?", view=move)
             player.xp += xpgained
@@ -289,11 +328,11 @@ async def enterdungeon(ctx, bot, user, id):
             await user.send("Not enough Mana to heal. Go into defensive mode to regenerate some of your Mana!.",
                             view=combat)
         else:
-            if player.health < 100:
+            if player.health < player.maxhealth:
                 player.health += 20
                 player.mana -= 20
-                if player.health > 100:
-                    player.health = 100
+                if player.health > player.maxhealth:
+                    player.health = player.maxhealth
                 await user.send(f"You have healed some of your wounds. **Health: {player.health} Mana: {player.mana}**",
                                 view=combat)
             else:
@@ -365,8 +404,10 @@ async def enterdungeon(ctx, bot, user, id):
             enemyclass.gethealth()
             enemyclass.getdamage()
             enemyclass.getdefense()
+            if int(player.level) >= 10:
+                enemyclass.islevelten(player.level)
             await user.send(
-                f"**Room: {room + 1}** \n You went Left, Encountering a {enemyclass.getname()}, Health: {enemyclass.gethealth()}, Damage: {enemyclass.getdamage()}, Defense: {enemyclass.getdefense()}, prepare to fight.",
+                f"**Room: {room + 1}** \n You went Left, Encountering a {enemyclass.getname()}, Health: {enemyclass.health}, Damage: {enemyclass.damage}, Defense: {enemyclass.defense}, prepare to fight.",
                 view=combat)
         if left[room] == "room":
             await user.send(f"**Room: {room + 1}** \n You went Left, What is your next move?", view=move)
@@ -390,8 +431,10 @@ async def enterdungeon(ctx, bot, user, id):
             enemyclass.gethealth()
             enemyclass.getdamage()
             enemyclass.getdefense()
+            if int(player.level) >= 10:
+                enemyclass.islevelten(player.level)
             await user.send(
-                f"**Room: {room + 1}** \n You went Left, Encountering a {enemyclass.getname()}, Health: {enemyclass.gethealth()}, Damage: {enemyclass.getdamage()}, Defense: {enemyclass.getdefense()}, prepare to fight.",
+                f"**Room: {room + 1}** \n You went Left, Encountering a {enemyclass.getname()}, Health: {enemyclass.health}, Damage: {enemyclass.damage}, Defense: {enemyclass.defense}, prepare to fight.",
                 view=combat)
         if right[room] == "room":
             await user.send(f"**Room: {room + 1}** \n You went Right, What is your next move?", view=move)
@@ -414,8 +457,10 @@ async def enterdungeon(ctx, bot, user, id):
             enemyclass.gethealth()
             enemyclass.getdamage()
             enemyclass.getdefense()
+            if int(player.level) >= 10:
+                enemyclass.islevelten(player.level)
             await user.send(
-                f"**Room: {room + 1}** \n You went Left, Encountering a {enemyclass.getname()}, Health: {enemyclass.gethealth()}, Damage: {enemyclass.getdamage()}, Defense: {enemyclass.getdefense()}, prepare to fight.",
+                f"**Room: {room + 1}** \n You went Left, Encountering a {enemyclass.getname()}, Health: {enemyclass.health}, Damage: {enemyclass.damage}, Defense: {enemyclass.defense}, prepare to fight.",
                 view=combat)
         if front[room] == "room":
             await user.send(f"**Room: {room + 1}** \n You went Forward, What is your next move?", view=move)
