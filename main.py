@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 from discord.ui import Button, View
-from discord.ext.commands import has_role
 import os
 import sys
 import random
@@ -193,7 +192,7 @@ async def lumber(ctx):
 
 @wb.command(description="Command for someone with the 'World Builder' role to change the server tax rate.")
 async def taxrate(ctx):
-    role = discord.utils.get(ctx.guild.roles, name="World Builder")
+    role = discord.utils.get(ctx.guild.roles, name="WB")
     if role in ctx.user.roles:
         def is_auth(m):
             return m.author == ctx.author
@@ -222,7 +221,7 @@ async def upgradelist(ctx):
         f"Here is your list of upgrades in tier {readtier(f'{dirr}/World/{str(ctx.guild.id)}')} \n \n" + '\n'.join(upg))
 
 
-@wb.command(guild_ids=Support, description="Command to get upgrades")
+@wb.command(guild_ids=Support, description="Command to create upgrades")
 async def upgradecreator(ctx):
     role = discord.utils.get(ctx.guild.roles, name="Design Lead")
     if role in ctx.user.roles:
@@ -308,37 +307,42 @@ async def upgradecreator(ctx):
             "You do not have the required permissions to run this command. Role needed: **Design Lead**")
 
 
-@wb.command(description="Command to get upgrades")
+@wb.command(description="Command to purchase upgrades")
 async def purchaseupg(ctx):
-    def is_auth(m):
-        return m.author == ctx.author
+    role = discord.utils.get(ctx.guild.roles, name="WB")
+    if role in ctx.user.roles:
+        def is_auth(m):
+            return m.author == ctx.author
 
-    un, unn, upg = purchaseupgrade(f'{dirr}/globals/', f'{dirr}/World/{str(ctx.guild.id)}')
-    await ctx.respond(
-        f"Here is your list of upgrades in tier {readtier(f'{dirr}/World/{str(ctx.guild.id)}')}")
-    await ctx.respond('\n'.join(upg))
-    rname = await bot.wait_for('message', check=is_auth, timeout=300)
-    rname = rname.content
-    alreadyhave = whathaveupg(f'{dirr}/World/{str(ctx.guild.id)}/upgrades')
-    if str(int(rname) - 1) in unn:
-        if un[(int(rname) - 1)] + ".txt" in alreadyhave:
-            await ctx.respond("Upgrade was already purchased.")
-        else:
-            await ctx.respond(f"Upgrade {un[(int(rname) - 1)]} has been purchased.")
-            if not os.path.exists(f'{dirr}/World/{str(ctx.guild.id)}/upgrades'):
-                os.mkdir(f'{dirr}/World/{str(ctx.guild.id)}/upgrades')
-            os.chdir(f'{dirr}/World/{str(ctx.guild.id)}/upgrades')
-            with open(f"{un[(int(rname) - 1)]}.txt", "w+") as f:
-                f.close()
-            with open(
-                    f"{dirr}/globals/upgrades/tier{readtier(f'{dirr}/World/{str(ctx.guild.id)}')}/{un[(int(rname) - 1)]}.txt",
-                    'r') as f:
-                line = f.readline()
-                line = line.split(" ")
-                f.close()
-            with open(f'{dirr}/World/{str(ctx.guild.id)}/{line[0]}.txt', "w+") as f:
-                f.write(str(line[1]))
-                f.close()
+        un, unn, upg = purchaseupgrade(f'{dirr}/globals/', f'{dirr}/World/{str(ctx.guild.id)}')
+        await ctx.respond(
+            f"Here is your list of upgrades in tier {readtier(f'{dirr}/World/{str(ctx.guild.id)}')}")
+        await ctx.respond('\n'.join(upg))
+        rname = await bot.wait_for('message', check=is_auth, timeout=300)
+        rname = rname.content
+        alreadyhave = whathaveupg(f'{dirr}/World/{str(ctx.guild.id)}/upgrades')
+        if str(int(rname) - 1) in unn:
+            if un[(int(rname) - 1)] + ".txt" in alreadyhave:
+                await ctx.respond("Upgrade was already purchased.")
+            else:
+                await ctx.respond(f"Upgrade {un[(int(rname) - 1)]} has been purchased.")
+                if not os.path.exists(f'{dirr}/World/{str(ctx.guild.id)}/upgrades'):
+                    os.mkdir(f'{dirr}/World/{str(ctx.guild.id)}/upgrades')
+                os.chdir(f'{dirr}/World/{str(ctx.guild.id)}/upgrades')
+                with open(f"{un[(int(rname) - 1)]}.txt", "w+") as f:
+                    f.close()
+                with open(
+                        f"{dirr}/globals/upgrades/tier{readtier(f'{dirr}/World/{str(ctx.guild.id)}')}/{un[(int(rname) - 1)]}.txt",
+                        'r') as f:
+                    line = f.readline()
+                    line = line.split(" ")
+                    f.close()
+                with open(f'{dirr}/World/{str(ctx.guild.id)}/{line[0]}.txt', "w+") as f:
+                    f.write(str(line[1]))
+                    f.close()
+    else:
+        await ctx.respond(
+            "You do not have the required permissions to run this command. Role needed: **WB**")
 
 
 @wb.command(guild_ids=Support, description="Admin command to create resources.")
@@ -526,8 +530,6 @@ async def itemcreator(ctx):
             "You do not have the required permissions to run this command. Role needed: **Design Lead**")
 
 
-
-
 @wb.command(description="Command to list current server information.")
 async def serverinfo(ctx):
     servstats = []
@@ -655,7 +657,6 @@ async def enemycreator(ctx):
 
 
 @wb.command(guild_ids=Support)
-@has_role("Design Lead")
 async def dungeoncreator(ctx):
     role = discord.utils.get(ctx.guild.roles, name="Design Lead")
     if role in ctx.user.roles:
