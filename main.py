@@ -122,7 +122,6 @@ async def mine(ctx):
             f"You have collected {roll} {resourcename}. You have earned {fpay} currency after tax, {round(float(value)) * round(float(roll))} before tax. Current tax rate is {taxratepercent}% and the current mining multiplier is {float(minemultiplier(f'{dirr}/World/{guildid}'))}x. Your current currency: {totalcurr}")
 
 
-
 @wb.command(description="Command for Lumberjacks to gather wood.")
 @commands.cooldown(rate=1, per=3600, type=commands.BucketType.member)
 async def lumber(ctx):
@@ -192,22 +191,25 @@ async def lumber(ctx):
             f"You have chopped {roll} {resourcename}. You have earned {fpay} currency after tax, {round(float(value)) * round(float(roll))} before tax. Current tax rate is {taxratepercent}% and the current lumber multiplier is {float(lumbermultiplier(f'{dirr}/World/{guildid}'))}x. Your current currency: {totalcurr}")
 
 
-@wb.command(description="Command for the Accountant to change the server tax rate.")
-@has_role("Accountant")
+@wb.command(description="Command for someone with the 'World Builder' role to change the server tax rate.")
 async def taxrate(ctx):
-    def is_auth(m):
-        return m.author == ctx.author
+    role = discord.utils.get(ctx.guild.roles, name="World Builder")
+    if role in ctx.user.roles:
+        def is_auth(m):
+            return m.author == ctx.author
 
-    await ctx.respond("Please type the tax rate you would like. ie 42%")
-    taxratemsg = await bot.wait_for('message', check=is_auth, timeout=300)
-    tax = taxratemsg.content.replace("%", "")
-    tax = int(tax) / 100
-    guildid = str(ctx.guild.id)
-    with open(f"{dirr}/World/{guildid}/taxrate.txt", "w+") as f:
-        f.write(str(tax))
-        f.close()
-    await ctx.respond(f"Tax rate has been set to {taxratemsg.content}")
-
+        await ctx.respond("Please type the tax rate you would like. ie 42%")
+        taxratemsg = await bot.wait_for('message', check=is_auth, timeout=300)
+        tax = taxratemsg.content.replace("%", "")
+        tax = int(tax) / 100
+        guildid = str(ctx.guild.id)
+        with open(f"{dirr}/World/{guildid}/taxrate.txt", "w+") as f:
+            f.write(str(tax))
+            f.close()
+        await ctx.respond(f"Tax rate has been set to {taxratemsg.content}")
+    else:
+        await ctx.respond(
+            "You do not have the required permissions to run this command. Role needed: **World Builder**")
 
 
 @wb.command(description="Command to get a list of upgrades.")
@@ -220,86 +222,90 @@ async def upgradelist(ctx):
         f"Here is your list of upgrades in tier {readtier(f'{dirr}/World/{str(ctx.guild.id)}')} \n \n" + '\n'.join(upg))
 
 
-
 @wb.command(guild_ids=Support, description="Command to get upgrades")
-@has_role("Design Lead")
 async def upgradecreator(ctx):
-    def is_auth(m):
-        return m.author == ctx.author
+    role = discord.utils.get(ctx.guild.roles, name="Design Lead")
+    if role in ctx.user.roles:
+        def is_auth(m):
+            return m.author == ctx.author
 
-    uname = Button(label="Upgrade Name", style=discord.ButtonStyle.primary)
-    stats = Button(label="Stats", style=discord.ButtonStyle.primary)
-    tier = Button(label="Tier", style=discord.ButtonStyle.primary)
-    write = Button(label="Finish", style=discord.ButtonStyle.green)
-    view = View()
-    view.add_item(uname)
-    view.add_item(stats)
-    view.add_item(tier)
-    view.add_item(write)
+        uname = Button(label="Upgrade Name", style=discord.ButtonStyle.primary)
+        stats = Button(label="Stats", style=discord.ButtonStyle.primary)
+        tier = Button(label="Tier", style=discord.ButtonStyle.primary)
+        write = Button(label="Finish", style=discord.ButtonStyle.green)
+        view = View()
+        view.add_item(uname)
+        view.add_item(stats)
+        view.add_item(tier)
+        view.add_item(write)
 
-    await ctx.respond("Welcome to the upgrade maker!", view=view)
+        await ctx.respond("Welcome to the upgrade maker!", view=view)
 
-    async def upnamecallback(interaction):
-        if interaction.user == ctx.author:
-            await interaction.response.edit_message(view=None)
-            await interaction.followup.send("Type the name of this upgrade.")
-            rval = await bot.wait_for('message', check=is_auth, timeout=300)
-            uname.label = f"{rval.content}"
-            await interaction.followup.send("Updated content:", view=view)
+        async def upnamecallback(interaction):
+            if interaction.user == ctx.author:
+                await interaction.response.edit_message(view=None)
+                await interaction.followup.send("Type the name of this upgrade.")
+                rval = await bot.wait_for('message', check=is_auth, timeout=300)
+                uname.label = f"{rval.content}"
+                await interaction.followup.send("Updated content:", view=view)
 
-    async def statnamecallback(interaction):
-        if interaction.user == ctx.author:
-            await interaction.response.edit_message(view=None)
-            await interaction.followup.send(
-                "Type the file name that this upgrade pertains to, and the multiplier, ie minemultiply 1.25. Only one "
-                "stat should be changed with this upgrade.")
-            cate = await bot.wait_for('message', check=is_auth, timeout=300)
-            stats.label = f"{cate.content}"
-            await interaction.followup.send("Updated content:", view=view)
+        async def statnamecallback(interaction):
+            if interaction.user == ctx.author:
+                await interaction.response.edit_message(view=None)
+                await interaction.followup.send(
+                    "Type the file name that this upgrade pertains to, and the multiplier, ie minemultiply 1.25. Only "
+                    "one "
+                    "stat should be changed with this upgrade.")
+                cate = await bot.wait_for('message', check=is_auth, timeout=300)
+                stats.label = f"{cate.content}"
+                await interaction.followup.send("Updated content:", view=view)
 
-    async def tiercallback(interaction):
-        if interaction.user == ctx.author:
-            await interaction.response.edit_message(view=None)
-            await interaction.followup.send(
-                "What tier does this upgrade go in? Just type the number. ie, 2")
-            tiername = await bot.wait_for('message', check=is_auth, timeout=300)
-            tier.label = f"{tiername.content}"
-            await interaction.followup.send("Updated content:", view=view)
+        async def tiercallback(interaction):
+            if interaction.user == ctx.author:
+                await interaction.response.edit_message(view=None)
+                await interaction.followup.send(
+                    "What tier does this upgrade go in? Just type the number. ie, 2")
+                tiername = await bot.wait_for('message', check=is_auth, timeout=300)
+                tier.label = f"{tiername.content}"
+                await interaction.followup.send("Updated content:", view=view)
 
-    async def writecallback(interaction):
-        if interaction.user == ctx.author:
-            if os.path.exists(f"{dirr}/globals/upgrades/tier{str(tier.label)}"):
-                os.chdir(f"{dirr}/globals/upgrades/tier{str(tier.label)}")
-                try:
-                    f = open(f"{uname.label}.txt", 'w+')
-                    f.write(f"{stats.label} \n")
-                    f.close()
-                    await interaction.response.edit_message(view=None)
-                    await interaction.followup.send(
-                        f"Upgrade {uname.label} has been created!")
-                except:
-                    await interaction.response.edit_message(view=None)
-                    await interaction.followup.send(
-                        f"Something went wrong creating the upgrade {uname.label}.")
-            else:
-                os.mkdir(f"{dirr}/globals/upgrades/tier{str(tier.label)}")
-                os.chdir(f"{dirr}/globals/upgrades/tier{str(tier.label)}")
-                try:
-                    f = open(f"{uname.label}.txt", 'w+')
-                    f.write(f"{stats.label} \n")
-                    f.close()
-                    await interaction.response.edit_message(view=None)
-                    await interaction.followup.send(
-                        f"Upgrade {uname.label} has been created!")
-                except:
-                    await interaction.response.edit_message(view=None)
-                    await interaction.followup.send(
-                        f"Something went wrong creating the upgrade {uname.label}.")
+        async def writecallback(interaction):
+            if interaction.user == ctx.author:
+                if os.path.exists(f"{dirr}/globals/upgrades/tier{str(tier.label)}"):
+                    os.chdir(f"{dirr}/globals/upgrades/tier{str(tier.label)}")
+                    try:
+                        f = open(f"{uname.label}.txt", 'w+')
+                        f.write(f"{stats.label} \n")
+                        f.close()
+                        await interaction.response.edit_message(view=None)
+                        await interaction.followup.send(
+                            f"Upgrade {uname.label} has been created!")
+                    except:
+                        await interaction.response.edit_message(view=None)
+                        await interaction.followup.send(
+                            f"Something went wrong creating the upgrade {uname.label}.")
+                else:
+                    os.mkdir(f"{dirr}/globals/upgrades/tier{str(tier.label)}")
+                    os.chdir(f"{dirr}/globals/upgrades/tier{str(tier.label)}")
+                    try:
+                        f = open(f"{uname.label}.txt", 'w+')
+                        f.write(f"{stats.label} \n")
+                        f.close()
+                        await interaction.response.edit_message(view=None)
+                        await interaction.followup.send(
+                            f"Upgrade {uname.label} has been created!")
+                    except:
+                        await interaction.response.edit_message(view=None)
+                        await interaction.followup.send(
+                            f"Something went wrong creating the upgrade {uname.label}.")
 
-    uname.callback = upnamecallback
-    stats.callback = statnamecallback
-    write.callback = writecallback
-    tier.callback = tiercallback
+        uname.callback = upnamecallback
+        stats.callback = statnamecallback
+        write.callback = writecallback
+        tier.callback = tiercallback
+    else:
+        await ctx.respond(
+            "You do not have the required permissions to run this command. Role needed: **Design Lead**")
 
 
 @wb.command(description="Command to get upgrades")
@@ -335,182 +341,191 @@ async def purchaseupg(ctx):
                 f.close()
 
 
-
 @wb.command(guild_ids=Support, description="Admin command to create resources.")
-@has_role("Design Lead")
 async def resourcecreator(ctx):
-    def is_auth(m):
-        return m.author == ctx.author
+    role = discord.utils.get(ctx.guild.roles, name="Design Lead")
+    if role in ctx.user.roles:
+        def is_auth(m):
+            return m.author == ctx.author
 
-    resname = Button(label="Resource name", style=discord.ButtonStyle.primary)
-    value = Button(label="Resource value", style=discord.ButtonStyle.primary)
-    category = Button(label="Category", style=discord.ButtonStyle.primary)
-    write = Button(label="Finish", style=discord.ButtonStyle.green)
-    view = View()
-    view.add_item(resname)
-    view.add_item(value)
-    view.add_item(category)
-    view.add_item(write)
-    await ctx.respond("Welcome to the resource creator.", view=view)
+        resname = Button(label="Resource name", style=discord.ButtonStyle.primary)
+        value = Button(label="Resource value", style=discord.ButtonStyle.primary)
+        category = Button(label="Category", style=discord.ButtonStyle.primary)
+        write = Button(label="Finish", style=discord.ButtonStyle.green)
+        view = View()
+        view.add_item(resname)
+        view.add_item(value)
+        view.add_item(category)
+        view.add_item(write)
+        await ctx.respond("Welcome to the resource creator.", view=view)
 
-    async def resourcenamecallback(interaction):
-        if interaction.user == ctx.author:
-            await interaction.response.edit_message(view=None)
-            await interaction.followup.send("Type the name of the resource.")
-            rname = await bot.wait_for('message', check=is_auth, timeout=300)
-            resname.label = f"{rname.content}"
-            await interaction.followup.send("Updated content:", view=view)
+        async def resourcenamecallback(interaction):
+            if interaction.user == ctx.author:
+                await interaction.response.edit_message(view=None)
+                await interaction.followup.send("Type the name of the resource.")
+                rname = await bot.wait_for('message', check=is_auth, timeout=300)
+                resname.label = f"{rname.content}"
+                await interaction.followup.send("Updated content:", view=view)
 
-    async def valuecallback(interaction):
-        if interaction.user == ctx.author:
-            await interaction.response.edit_message(view=None)
-            await interaction.followup.send("Type the value of one of this resource.")
-            rval = await bot.wait_for('message', check=is_auth, timeout=300)
-            value.label = f"Value: {rval.content}"
-            await interaction.followup.send("Updated content:", view=view)
+        async def valuecallback(interaction):
+            if interaction.user == ctx.author:
+                await interaction.response.edit_message(view=None)
+                await interaction.followup.send("Type the value of one of this resource.")
+                rval = await bot.wait_for('message', check=is_auth, timeout=300)
+                value.label = f"Value: {rval.content}"
+                await interaction.followup.send("Updated content:", view=view)
 
-    async def categorycallback(interaction):
-        if interaction.user == ctx.author:
-            await interaction.response.edit_message(view=None)
-            await interaction.followup.send(
-                "Enter the category(s) that you want this resource to be in. ie mine, wood, or none")
-            cate = await bot.wait_for('message', check=is_auth, timeout=300)
-            category.label = f"type: {cate.content}"
-            await interaction.followup.send("Updated content:", view=view)
+        async def categorycallback(interaction):
+            if interaction.user == ctx.author:
+                await interaction.response.edit_message(view=None)
+                await interaction.followup.send(
+                    "Enter the category(s) that you want this resource to be in. ie mine, wood, or none")
+                cate = await bot.wait_for('message', check=is_auth, timeout=300)
+                category.label = f"type: {cate.content}"
+                await interaction.followup.send("Updated content:", view=view)
 
-    async def writecallback(interaction):
-        if interaction.user == ctx.author:
-            if os.path.exists(f"{dirr}/globals/items"):
-                os.chdir(f"{dirr}/globals/items")
-                try:
-                    f = open(f"{resname.label}.txt", 'w+')
-                    f.write(f"{value.label} \n")
-                    f.write(f"{category.label}")
-                    f.close()
-                    await interaction.response.edit_message(view=None)
-                    await interaction.followup.send(
-                        f"Resource {resname.label} has been created!")
-                except:
-                    await interaction.response.edit_message(view=None)
-                    await interaction.followup.send(
-                        f"Something went wrong creating the resource {resname.label}.")
+        async def writecallback(interaction):
+            if interaction.user == ctx.author:
+                if os.path.exists(f"{dirr}/globals/items"):
+                    os.chdir(f"{dirr}/globals/items")
+                    try:
+                        f = open(f"{resname.label}.txt", 'w+')
+                        f.write(f"{value.label} \n")
+                        f.write(f"{category.label}")
+                        f.close()
+                        await interaction.response.edit_message(view=None)
+                        await interaction.followup.send(
+                            f"Resource {resname.label} has been created!")
+                    except:
+                        await interaction.response.edit_message(view=None)
+                        await interaction.followup.send(
+                            f"Something went wrong creating the resource {resname.label}.")
 
-    resname.callback = resourcenamecallback
-    value.callback = valuecallback
-    write.callback = writecallback
-    category.callback = categorycallback
+        resname.callback = resourcenamecallback
+        value.callback = valuecallback
+        write.callback = writecallback
+        category.callback = categorycallback
+    else:
+        await ctx.respond(
+            "You do not have the required permissions to run this command. Role needed: **Design Lead**")
 
 
 @wb.command(guild_ids=Support, description="Admin command to create Items.")
-@has_role("Design Lead")
 async def itemcreator(ctx):
-    itemname = ""
-    itemvalue = ""
-    itemtype = ""
+    role = discord.utils.get(ctx.guild.roles, name="Design Lead")
+    if role in ctx.user.roles:
+        itemname = ""
+        itemvalue = ""
+        itemtype = ""
 
-    def is_auth(m):
-        return m.author == ctx.author
+        def is_auth(m):
+            return m.author == ctx.author
 
-    resname = Button(label="Item name", style=discord.ButtonStyle.primary)
-    value = Button(label="Item value", style=discord.ButtonStyle.primary)
-    category = Button(label="Type", style=discord.ButtonStyle.primary)
-    write = Button(label="Finish", style=discord.ButtonStyle.green)
-    view = View()
-    view.add_item(resname)
-    view.add_item(value)
-    view.add_item(category)
-    view.add_item(write)
-    await ctx.respond("Welcome to the Item creator.", view=view)
+        resname = Button(label="Item name", style=discord.ButtonStyle.primary)
+        value = Button(label="Item value", style=discord.ButtonStyle.primary)
+        category = Button(label="Type", style=discord.ButtonStyle.primary)
+        write = Button(label="Finish", style=discord.ButtonStyle.green)
+        view = View()
+        view.add_item(resname)
+        view.add_item(value)
+        view.add_item(category)
+        view.add_item(write)
+        await ctx.respond("Welcome to the Item creator.", view=view)
 
-    async def resourcenamecallback(interaction):
-        nonlocal itemname
-        if interaction.user == ctx.author:
-            await interaction.response.edit_message(view=None)
-            await interaction.followup.send("Type the name of the Item.")
-            rname = await bot.wait_for('message', check=is_auth, timeout=300)
-            itemname = f"{rname.content}"
-            await interaction.followup.send(f"Your Item's name is {itemname}", view=view)
+        async def resourcenamecallback(interaction):
+            nonlocal itemname
+            if interaction.user == ctx.author:
+                await interaction.response.edit_message(view=None)
+                await interaction.followup.send("Type the name of the Item.")
+                rname = await bot.wait_for('message', check=is_auth, timeout=300)
+                itemname = f"{rname.content}"
+                await interaction.followup.send(f"Your Item's name is {itemname}", view=view)
 
-    async def valuecallback(interaction):
-        nonlocal itemvalue
-        if interaction.user == ctx.author:
-            await interaction.response.edit_message(view=None)
-            await interaction.followup.send("Type the value of one of this Item.")
-            rval = await bot.wait_for('message', check=is_auth, timeout=300)
-            itemvalue = f"Value: {rval.content}"
-            await interaction.followup.send(f"Your Item's value is {itemvalue}", view=view)
+        async def valuecallback(interaction):
+            nonlocal itemvalue
+            if interaction.user == ctx.author:
+                await interaction.response.edit_message(view=None)
+                await interaction.followup.send("Type the value of one of this Item.")
+                rval = await bot.wait_for('message', check=is_auth, timeout=300)
+                itemvalue = f"Value: {rval.content}"
+                await interaction.followup.send(f"Your Item's value is {itemvalue}", view=view)
 
-    async def categorycallback(interaction):
-        nonlocal itemtype
-        if interaction.user == ctx.author:
-            await interaction.response.edit_message(view=None)
-            await interaction.followup.send(
-                "Enter the type you want this item to have. ie weapon, shield, armor, or none")
-            cate = await bot.wait_for('message', check=is_auth, timeout=300)
-            itemtype = f"type: {cate.content}"
-            await interaction.followup.send(f"Your Item's type(s) is {itemtype}", view=view)
+        async def categorycallback(interaction):
+            nonlocal itemtype
+            if interaction.user == ctx.author:
+                await interaction.response.edit_message(view=None)
+                await interaction.followup.send(
+                    "Enter the type you want this item to have. ie weapon, shield, armor, or none")
+                cate = await bot.wait_for('message', check=is_auth, timeout=300)
+                itemtype = f"type: {cate.content}"
+                await interaction.followup.send(f"Your Item's type(s) is {itemtype}", view=view)
 
-    async def writecallback(interaction):
-        nonlocal itemname
-        nonlocal itemvalue
-        nonlocal itemtype
-        if interaction.user == ctx.author:
-            await interaction.response.edit_message(view=None)
-            if os.path.exists(f"{dirr}/globals/items"):
-                os.chdir(f"{dirr}/globals/items")
-                try:
-                    f = open(f"{itemname}.txt", 'w+')
-                    f.write(f"{itemvalue} \n")
-                    f.write(f"{itemtype} \n")
-                    await interaction.followup.send(f"Is this item craftable? (y/n)")
-                    iscraftable = await bot.wait_for('message', check=is_auth, timeout=300)
-                    if iscraftable.content == "y":
-                        await interaction.followup.send(f"What is the recipe? (Cloth,Iron,Stone) < Must match the "
-                                                        f"case of the resource, Usually uppercase as shown.")
-                        recipe = await bot.wait_for('message', check=is_auth, timeout=300)
-                        recipe = recipe.content.replace(" ", "").lower()
-                        recipe = "recipe: " + recipe
-                        f.write(f"{recipe} \n")
-                    if "weapon" in itemtype:
+        async def writecallback(interaction):
+            nonlocal itemname
+            nonlocal itemvalue
+            nonlocal itemtype
+            if interaction.user == ctx.author:
+                await interaction.response.edit_message(view=None)
+                if os.path.exists(f"{dirr}/globals/items"):
+                    os.chdir(f"{dirr}/globals/items")
+                    try:
+                        f = open(f"{itemname}.txt", 'w+')
+                        f.write(f"{itemvalue} \n")
+                        f.write(f"{itemtype} \n")
+                        await interaction.followup.send(f"Is this item craftable? (y/n)")
+                        iscraftable = await bot.wait_for('message', check=is_auth, timeout=300)
+                        if iscraftable.content == "y":
+                            await interaction.followup.send(f"What is the recipe? (Cloth,Iron,Stone) < Must match the "
+                                                            f"case of the resource, Usually uppercase as shown.")
+                            recipe = await bot.wait_for('message', check=is_auth, timeout=300)
+                            recipe = recipe.content.replace(" ", "").lower()
+                            recipe = "recipe: " + recipe
+                            f.write(f"{recipe} \n")
+                        if "weapon" in itemtype:
+                            await interaction.followup.send(
+                                f"How much damage will this item do? (this is a multiplier, usually over 1.0)")
+                            dam = await bot.wait_for('message', check=is_auth, timeout=300)
+                            damage = str(dam.content)
+                            damage = "damage: " + damage
+                            f.write(f"{damage}")
+                            await interaction.followup.send(
+                                f"Does this weapon have any special damage types? (poison, fire, freezing, explosive)")
+                            eff = await bot.wait_for('message', check=is_auth, timeout=300)
+                            effect = str(eff.content)
+                            effect = "effect: " + effect
+                            f.write(f"{effect}")
+                        if "shield" in itemtype:
+                            await interaction.followup.send(
+                                f"How much defense does this item have? (this is a multiplier, usually over 1.0)")
+                            defe = await bot.wait_for('message', check=is_auth, timeout=300)
+                            defense = str(defe.content)
+                            defense = "defense: " + defense
+                            f.write(f"{defense}")
+                        if "armor" in itemtype:
+                            await interaction.followup.send(
+                                f"How much defense does this item have? (this is a multiplier, usually over 1.0)")
+                            defe = await bot.wait_for('message', check=is_auth, timeout=300)
+                            defense = str(defe.content)
+                            defense = "defense: " + defense
+                            f.write(f"{defense}")
+
+                        f.close()
                         await interaction.followup.send(
-                            f"How much damage will this item do? (this is a multiplier, usually over 1.0)")
-                        dam = await bot.wait_for('message', check=is_auth, timeout=300)
-                        damage = str(dam.content)
-                        damage = "damage: " + damage
-                        f.write(f"{damage}")
+                            f"Item {itemname} has been created!")
+                    except:
+                        await interaction.response.edit_message(view=None)
                         await interaction.followup.send(
-                            f"Does this weapon have any special damage types? (poison, fire, freezing, explosive)")
-                        eff = await bot.wait_for('message', check=is_auth, timeout=300)
-                        effect = str(eff.content)
-                        effect = "effect: " + effect
-                        f.write(f"{effect}")
-                    if "shield" in itemtype:
-                        await interaction.followup.send(
-                            f"How much defense does this item have? (this is a multiplier, usually over 1.0)")
-                        defe = await bot.wait_for('message', check=is_auth, timeout=300)
-                        defense = str(defe.content)
-                        defense = "defense: " + defense
-                        f.write(f"{defense}")
-                    if "armor" in itemtype:
-                        await interaction.followup.send(
-                            f"How much defense does this item have? (this is a multiplier, usually over 1.0)")
-                        defe = await bot.wait_for('message', check=is_auth, timeout=300)
-                        defense = str(defe.content)
-                        defense = "defense: " + defense
-                        f.write(f"{defense}")
+                            f"Something went wrong creating the item {itemname}.")
 
-                    f.close()
-                    await interaction.followup.send(
-                        f"Item {itemname} has been created!")
-                except:
-                    await interaction.response.edit_message(view=None)
-                    await interaction.followup.send(
-                        f"Something went wrong creating the item {itemname}.")
+        resname.callback = resourcenamecallback
+        value.callback = valuecallback
+        write.callback = writecallback
+        category.callback = categorycallback
+    else:
+        await ctx.respond(
+            "You do not have the required permissions to run this command. Role needed: **Design Lead**")
 
-    resname.callback = resourcenamecallback
-    value.callback = valuecallback
-    write.callback = writecallback
-    category.callback = categorycallback
+
 
 
 @wb.command(description="Command to list current server information.")
@@ -622,21 +637,31 @@ async def dc(ctx):
 
 
 @wb.command(guild_ids=Support)
-@has_role("Design Lead")
 async def classcreator(ctx):
-    await createclass(ctx, bot)
+    role = discord.utils.get(ctx.guild.roles, name="Design Lead")
+    if role in ctx.user.roles:
+        await createclass(ctx, bot)
+    else:
+        await ctx.respond("You do not have the required permissions to run this command. Role needed: **Design Lead**")
 
 
 @wb.command(guild_ids=Support)
-@has_role("Design Lead")
 async def enemycreator(ctx):
-    await createenemy(ctx, bot)
+    role = discord.utils.get(ctx.guild.roles, name="Design Lead")
+    if role in ctx.user.roles:
+        await createenemy(ctx, bot)
+    else:
+        await ctx.respond("You do not have the required permissions to run this command. Role needed: **Design Lead**")
 
 
 @wb.command(guild_ids=Support)
 @has_role("Design Lead")
 async def dungeoncreator(ctx):
-    await createdungeon(ctx, bot)
+    role = discord.utils.get(ctx.guild.roles, name="Design Lead")
+    if role in ctx.user.roles:
+        await createdungeon(ctx, bot)
+    else:
+        await ctx.respond("You do not have the required permissions to run this command. Role needed: **Design Lead**")
 
 
 bot.run("OTM3NTQ2NTI3NDY1OTYzNTkw.YfdUPg.EIaW-h0t1qDZLr0nDgJgwJbXRa0")
