@@ -325,7 +325,7 @@ class Enemy:
         self.damage += int(healthh)
         return self.damage
     def setdefense(self, healthh):
-        self.defense += int(healthh)
+        self.defense += float(healthh)
         return self.defense
 
     def getdamage(self):
@@ -333,7 +333,7 @@ class Enemy:
             lines = enemyd.readlines()
             for a in lines:
                 if "damage" in a:
-                    self.damage = int(a.split(" ")[1])
+                    self.damage = float(a.split(" ")[1].replace("/n", ""))
         return self.damage
 
     def getdefense(self):
@@ -341,5 +341,5 @@ class Enemy:
             lines = enemyd.readlines()
             for a in lines:
                 if "defense" in a:
-                    self.defense = int(a.split(" ")[1])
+                    self.defense = float(a.split(" ")[1].replace("/n", ""))
         return self.defense

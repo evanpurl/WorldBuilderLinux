@@ -13,6 +13,7 @@ async def enterdungeon(ctx, bot, user, id):
         return m.author == ctx.author
 
     enemylist = None
+    boss = None
     enemyclass = None
     guildid = str(ctx.guild.id)
     maxrooms = random.randint(10, 25)
@@ -205,6 +206,8 @@ async def enterdungeon(ctx, bot, user, id):
             lines = f.readlines()
             light = lines[0].replace("ll: ", "")
             enemies = lines[1].replace("enemies: ", "").replace("\n", "").split(",")
+            nonlocal boss
+            boss = [i for i in lines if 'boss' in i][0].split(": ")[1].replace("\n", "")
         nonlocal enemylist
         enemylist = enemies
 
@@ -241,6 +244,8 @@ async def enterdungeon(ctx, bot, user, id):
     combat.add_item(retreat)
 
     async def attackcallback(interaction):
+        nonlocal room
+        nonlocal maxrooms
         nonlocal enemyclass
         await interaction.response.edit_message(view=None)
         if player.defmode is not None:
@@ -257,9 +262,15 @@ async def enterdungeon(ctx, bot, user, id):
                 enemyclass.health -= damage
             await user.send(f"You attacked the {enemyclass.getname()}! **Their health: {enemyclass.health}**")  #
         if enemyclass.health <= 0:
+            if room == maxrooms:
+                 await user.send(f"You have beat the boss, **XP Gained: 25**. Ending Dungeon Crawler.")
+                 player.xp += 25
+                 player.setxp(player.xp)
+                 return
             xpgained = float(enemyclass.gethealth()) / 4
             await user.send(f"You have won the battle! **XP Gained: {xpgained}** where will you go next?", view=move)
             player.xp += xpgained
+            player.mana = player.maxmana
 
             if player.xp >= 100:
                 player.levelup()
@@ -279,8 +290,11 @@ async def enterdungeon(ctx, bot, user, id):
                 else:
                     player.sethealth((damage * -1))
                     if player.health <= 0:
-                        await user.send("You have perished in the heat of battle. Ending Dungeon Crawler.")
-                        return
+                        if room == maxrooms:
+                             await user.send(f"You have been killed by the {enemyclass.getname()}. Ending Dungeon Crawler.")
+                        else:
+                            await user.send("You have been killed in the heat of battle. Ending Dungeon Crawler.")
+                            return
                     else:
                         await user.send(
                             f"The {enemyclass.getname()} did {damage} damage! **Your health: {player.health}**",
@@ -306,7 +320,7 @@ async def enterdungeon(ctx, bot, user, id):
         await user.send(f"The {enemyclass.getname()} will {enmove}!")
         if enmove == "attack":
             enemyclass.defmode == None
-            damage = (int(enemyclass.getdamage()) - (int(player.defense) / 2))
+            damage = (int(enemyclass.getdamage()) - (int(player.defense)))
             if damage <= 0:
                 await user.send(f"The {enemyclass.getname()} did no damage!", view=combat)
             else:
@@ -340,7 +354,12 @@ async def enterdungeon(ctx, bot, user, id):
 
     async def retreatcallback(interaction):
         nonlocal room
-        room -= 1
+        nonlocal maxrooms
+        if room == maxrooms:
+             await user.send(f"You have retreated from the boss, **XP Gained: 5**. Ending Dungeon Crawler.")
+             player.xp += 5
+             player.setxp(player.xp)
+             return
         await interaction.response.edit_message(view=None)
         await user.send(f"**Room: {room + 1}** \n You have retreated from combat. Where do you want to go next?",
                         view=move)
@@ -392,80 +411,97 @@ async def enterdungeon(ctx, bot, user, id):
         nonlocal room
         nonlocal maxrooms
         nonlocal enemyclass
+        nonlocal boss
         room += 1
-        if room == maxrooms:
-            await user.send(f"Boss fight room would be here. Here's a cookie for finishing this! 🍪 XP gained for "
-                            "finishing: 25. Total XP: {player.xp}")
-            player.xp += 25
-            player.setxp(player.xp)
-            return
-        if left[room] == "enemy":
-            enemyclass = Enemy(enemylist[random.randint(0, len(enemylist) - 1)])
+        if room == maxrooms:  # Boss Code
+            enemyclass = Enemy(boss)
             enemyclass.gethealth()
             enemyclass.getdamage()
             enemyclass.getdefense()
-            if int(player.level) >= 10:
-                enemyclass.islevelten(player.level)
             await user.send(
-                f"**Room: {room + 1}** \n You went Left, Encountering a {enemyclass.getname()}, Health: {enemyclass.health}, Damage: {enemyclass.damage}, Defense: {enemyclass.defense}, prepare to fight.",
+                f"**Room: Final** \n You went Forward, Encountering the boss, {enemyclass.getname()}, Health: {enemyclass.health}, Damage: {enemyclass.damage}, Defense: {enemyclass.defense}, prepare to fight.",
                 view=combat)
-        if left[room] == "room":
-            await user.send(f"**Room: {room + 1}** \n You went Left, What is your next move?", view=move)
-        if left[room] == "room item":
-            await user.send(
-                f"**Room: {room + 1}** \n You went Left, a locked chest is in front of you, what will you do?",
-                view=chest)
+        else:
+            if left[room] == "enemy":
+                enemyclass = Enemy(enemylist[random.randint(0, len(enemylist) - 1)])
+                enemyclass.gethealth()
+                enemyclass.getdamage()
+                enemyclass.getdefense()
+                if int(player.level) >= 10:
+                    enemyclass.islevelten(player.level)
+                await user.send(
+                    f"**Room: {room + 1}** \n You went Left, Encountering a {enemyclass.getname()}, Health: {enemyclass.health}, Damage: {enemyclass.damage}, Defense: {enemyclass.defense}, prepare to fight.",
+                    view=combat)
+            if left[room] == "room":
+                await user.send(f"**Room: {room + 1}** \n You went Left, What is your next move?", view=move)
+            if left[room] == "room item":
+                await user.send(
+                    f"**Room: {room + 1}** \n You went Left, a locked chest is in front of you, what will you do?",
+                    view=chest)
 
     async def rightcallback(interaction):
         await interaction.response.edit_message(view=None)
         nonlocal room
         nonlocal maxrooms
         nonlocal enemyclass
+        nonlocal boss
         room += 1
-        if room == maxrooms:
-            await user.send("Boss fight room would be here. Here's a cookie for finishing this! 🍪")
-            return
-
-        if right[room] == "enemy":
-            enemyclass = Enemy(enemylist[random.randint(0, len(enemylist) - 1)])
+        if room == maxrooms:  # Boss Code
+            enemyclass = Enemy(boss)
             enemyclass.gethealth()
             enemyclass.getdamage()
             enemyclass.getdefense()
-            if int(player.level) >= 10:
-                enemyclass.islevelten(player.level)
             await user.send(
-                f"**Room: {room + 1}** \n You went Left, Encountering a {enemyclass.getname()}, Health: {enemyclass.health}, Damage: {enemyclass.damage}, Defense: {enemyclass.defense}, prepare to fight.",
+                f"**Room: Final** \n You went Forward, Encountering the boss, {enemyclass.getname()}, Health: {enemyclass.health}, Damage: {enemyclass.damage}, Defense: {enemyclass.defense}, prepare to fight.",
                 view=combat)
-        if right[room] == "room":
-            await user.send(f"**Room: {room + 1}** \n You went Right, What is your next move?", view=move)
-        if right[room] == "room item":
-            await user.send(
-                f"**Room: {room + 1}** \n You went Right, a locked chest is in front of you, what will you do?",
-                view=chest)
+        else:
+            if right[room] == "enemy":
+                enemyclass = Enemy(enemylist[random.randint(0, len(enemylist) - 1)])
+                enemyclass.gethealth()
+                enemyclass.getdamage()
+                enemyclass.getdefense()
+                if int(player.level) >= 10:
+                    enemyclass.islevelten(player.level)
+                await user.send(
+                    f"**Room: {room + 1}** \n You went Right, Encountering a {enemyclass.getname()}, Health: {enemyclass.health}, Damage: {enemyclass.damage}, Defense: {enemyclass.defense}, prepare to fight.",
+                    view=combat)
+            if right[room] == "room":
+                await user.send(f"**Room: {room + 1}** \n You went Right, What is your next move?", view=move)
+            if right[room] == "room item":
+                await user.send(
+                    f"**Room: {room + 1}** \n You went Right, a locked chest is in front of you, what will you do?",
+                    view=chest)
 
     async def frontcallback(interaction):
         await interaction.response.edit_message(view=None)
+        nonlocal boss
         nonlocal room
         nonlocal maxrooms
         nonlocal enemyclass
         room += 1
-        if room == maxrooms:
-            await user.send("Boss fight room would be here. Here's a cookie for finishing this! 🍪")
-            return
-        if front[room] == "enemy":
-            enemyclass = Enemy(enemylist[random.randint(0, len(enemylist) - 1)])
+        if room == maxrooms: # Boss Code
+            enemyclass = Enemy(boss)
             enemyclass.gethealth()
             enemyclass.getdamage()
             enemyclass.getdefense()
-            if int(player.level) >= 10:
-                enemyclass.islevelten(player.level)
             await user.send(
-                f"**Room: {room + 1}** \n You went Left, Encountering a {enemyclass.getname()}, Health: {enemyclass.health}, Damage: {enemyclass.damage}, Defense: {enemyclass.defense}, prepare to fight.",
+                f"**Room: Final** \n You went Forward, Encountering the boss, {enemyclass.getname()}, Health: {enemyclass.health}, Damage: {enemyclass.damage}, Defense: {enemyclass.defense}, prepare to fight.",
                 view=combat)
-        if front[room] == "room":
-            await user.send(f"**Room: {room + 1}** \n You went Forward, What is your next move?", view=move)
-        if front[room] == "room item":
-            await user.send(f"**Room: {room + 1}** \n You went Forward, a locked chest is in front of you, what will "
+        else:
+            if front[room] == "enemy":
+                enemyclass = Enemy(enemylist[random.randint(0, len(enemylist) - 1)])
+                enemyclass.gethealth()
+                enemyclass.getdamage()
+                enemyclass.getdefense()
+                if int(player.level) >= 10:
+                    enemyclass.islevelten(player.level)
+                await user.send(
+                f"**Room: {room + 1}** \n You went Forward, Encountering a {enemyclass.getname()}, Health: {enemyclass.health}, Damage: {enemyclass.damage}, Defense: {enemyclass.defense}, prepare to fight.",
+                view=combat)
+            if front[room] == "room":
+                await user.send(f"**Room: {room + 1}** \n You went Forward, What is your next move?", view=move)
+            if front[room] == "room item":
+                await user.send(f"**Room: {room + 1}** \n You went Forward, a locked chest is in front of you, what will "
                             f"you do?", view=chest)
 
     leftbtn.callback = leftcallback

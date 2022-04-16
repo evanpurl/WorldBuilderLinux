@@ -146,6 +146,10 @@ async def createdungeon(ctx, bot):
         damage = damage.content.replace(" ,", "").replace(", ", "")
         c.append(f'enemies: {damage}')
         await ctx.respond(f'enemies: {damage}')
+        await ctx.respond("What boss is in this dungeon? Check discord for boss list.")
+        damage = await bot.wait_for('message', check=is_auth, timeout=300)
+        await ctx.respond(f"Boss: {damage.content}")
+        c.append(f"boss: {damage.content}")
         if not os.path.exists(f"{dirr}/globals/dungeons/"):
             os.mkdir(f"{dirr}/globals/dungeons/")
         with open(f"{dirr}/globals/dungeons/{cname}.txt", "w+") as cl:

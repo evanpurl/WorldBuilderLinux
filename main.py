@@ -35,7 +35,7 @@ async def on_ready():
 async def on_guild_join(guild):
     if not os.path.exists(f"{dirr}/World/{str(guild.id)}"):  # Creates server folders if they do not exist already.
         os.mkdir(f"{dirr}/World/{str(guild.id)}")
-        os.mkdir(f"{dirr}/World/{str(guild.id)}/doneupgrade")
+        os.mkdir(f"{dirr}/World/{str(guild.id)}/upgrades")
         os.mkdir(f"{dirr}/World/{str(guild.id)}/Players")
         os.mkdir(f"{dirr}/World/{str(guild.id)}/inventory")
         with open(f"{dirr}/World/{str(guild.id)}/treasury.txt", "w+") as f:
@@ -53,7 +53,6 @@ Support = [904120920862519396]
 
 @wb.command(description="Command for miners to gather minerals, stone, iron, gold, etc.")
 @commands.cooldown(rate=1, per=3600, type=commands.BucketType.member)
-@has_role("Miner")
 async def mine(ctx):
     guildid = str(ctx.guild.id)
     memberid = str(ctx.user.id)
@@ -123,22 +122,9 @@ async def mine(ctx):
             f"You have collected {roll} {resourcename}. You have earned {fpay} currency after tax, {round(float(value)) * round(float(roll))} before tax. Current tax rate is {taxratepercent}% and the current mining multiplier is {float(minemultiplier(f'{dirr}/World/{guildid}'))}x. Your current currency: {totalcurr}")
 
 
-@mine.error
-async def mine_error(ctx, error):
-    if isinstance(error, commands.MissingRole):
-        msg = "You don't have the proper role! You require the role 'Miner'!"
-        await ctx.send(msg)
-    elif isinstance(error, commands.CommandOnCooldown):
-        msg = '**Command is on cooldown**, check back in {:.2f} Minute(s)'.format(error.retry_after / 60)
-        await ctx.send(msg)
-    else:
-        print(error)
-
-
 
 @wb.command(description="Command for Lumberjacks to gather wood.")
 @commands.cooldown(rate=1, per=3600, type=commands.BucketType.member)
-@has_role("Lumberjack")
 async def lumber(ctx):
     guildid = str(ctx.guild.id)
     memberid = str(ctx.user.id)
@@ -206,18 +192,6 @@ async def lumber(ctx):
             f"You have chopped {roll} {resourcename}. You have earned {fpay} currency after tax, {round(float(value)) * round(float(roll))} before tax. Current tax rate is {taxratepercent}% and the current lumber multiplier is {float(lumbermultiplier(f'{dirr}/World/{guildid}'))}x. Your current currency: {totalcurr}")
 
 
-@lumber.error
-async def lumber_error(ctx, error):
-    if isinstance(error, commands.MissingRole):
-        msg = "You don't have the proper role! You require the role 'Lumberjack'!"
-        await ctx.send(msg)
-    if isinstance(error, commands.CommandOnCooldown):
-        msg = '**Command is on cooldown**, check back in {:.2f} Minute(s)'.format(error.retry_after / 60)
-        await ctx.send(msg)
-    else:
-        print(error)
-
-
 @wb.command(description="Command for the Accountant to change the server tax rate.")
 @has_role("Accountant")
 async def taxrate(ctx):
@@ -235,12 +209,6 @@ async def taxrate(ctx):
     await ctx.respond(f"Tax rate has been set to {taxratemsg.content}")
 
 
-@taxrate.error
-async def taxrate_error(ctx, error):
-    if isinstance(error, commands.MissingRole):
-        msg = "You don't have the proper role! You require the role 'Accountant'!"
-        await ctx.send(msg)
-
 
 @wb.command(description="Command to get a list of upgrades.")
 async def upgradelist(ctx):
@@ -251,14 +219,6 @@ async def upgradelist(ctx):
     await ctx.respond(
         f"Here is your list of upgrades in tier {readtier(f'{dirr}/World/{str(ctx.guild.id)}')} \n \n" + '\n'.join(upg))
 
-
-@upgradelist.error
-async def upgradelist_error(ctx, error):
-    if isinstance(error, commands.MissingRole):
-        msg = "You don't have the proper role! You require the role 'Accountant'!"
-        await ctx.send(msg)
-    else:
-        print(error)
 
 
 @wb.command(guild_ids=Support, description="Command to get upgrades")
@@ -342,15 +302,6 @@ async def upgradecreator(ctx):
     tier.callback = tiercallback
 
 
-@upgradecreator.error
-async def upgradecreator_error(ctx, error):
-    if isinstance(error, commands.MissingRole):
-        msg = "You don't have the proper role! You require the role 'Accountant'!"
-        await ctx.send(msg)
-    else:
-        print(error)
-
-
 @wb.command(description="Command to get upgrades")
 async def purchaseupg(ctx):
     def is_auth(m):
@@ -383,14 +334,6 @@ async def purchaseupg(ctx):
                 f.write(str(line[1]))
                 f.close()
 
-
-@purchaseupg.error
-async def purchaseupg_error(ctx, error):
-    if isinstance(error, commands.MissingRole):
-        msg = "You don't have the proper role! You require the role 'Accountant'!"
-        await ctx.send(msg)
-    else:
-        print(error)
 
 
 @wb.command(guild_ids=Support, description="Admin command to create resources.")
@@ -456,12 +399,6 @@ async def resourcecreator(ctx):
     value.callback = valuecallback
     write.callback = writecallback
     category.callback = categorycallback
-
-
-@resourcecreator.error
-async def resourcecreator_error(ctx, error):
-    pass  # When an error happens (When someone without the proper role tries running the command, it doesn't respond
-    # to them.)
 
 
 @wb.command(guild_ids=Support, description="Admin command to create Items.")
@@ -576,12 +513,6 @@ async def itemcreator(ctx):
     category.callback = categorycallback
 
 
-@itemcreator.error
-async def itemcreator_error(ctx, error):
-    pass  # When an error happens (When someone without the proper role tries running the command, it doesn't respond
-    # to them.)
-
-
 @wb.command(description="Command to list current server information.")
 async def serverinfo(ctx):
     servstats = []
@@ -685,7 +616,6 @@ async def repair(ctx):
 
 
 @wb.command(guild_ids=Support, description="Dungeon Crawler start command.")
-@has_role("Design Lead")
 async def dc(ctx):
     id = ctx.author.id
     await enterdungeon(ctx, bot, ctx.author, id)
